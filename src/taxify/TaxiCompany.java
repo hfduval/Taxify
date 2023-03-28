@@ -39,20 +39,13 @@ public class TaxiCompany implements ITaxiCompany, ISubject {
     @Override
     public boolean requestService(int user) {
         int userIndex = indexOfUserId(user);
-        int vehicleIndex = findFreeVehicle();
+        int freeVehicleIndex = findFreeVehicle();
+        int rideShareVehicleIndex = findRideShareVehicle();
+        ILocation[] endPoints = new ILocation[2];
 
-        // if there is a free vehicle, assign a random pickup and drop-off location to the new service
-        // the distance between the pickup and the drop-off location should be at least 3 blocks
+        int vehicleIndex = findRideType(userIndex, freeVehicleIndex, rideShareVehicleIndex, endPoints);
 
         if (vehicleIndex != -1) {
-            ILocation origin, destination;
-
-            do {
-
-                origin = ApplicationLibrary.randomLocation();
-                destination = ApplicationLibrary.randomLocation(origin);
-
-            } while (ApplicationLibrary.distance(origin, this.vehicles.get(vehicleIndex).getLocation()) < 3);
 
             // update the user status
 
@@ -60,12 +53,12 @@ public class TaxiCompany implements ITaxiCompany, ISubject {
 
             // create a service with the user, the pickup and the drop-off location
 
-            Service service = new Service(this.users.get(userIndex), origin, destination);
+            IService service;
+            service = new Service(this.users.get(userIndex), endPoints[0], endPoints[1]);
 
             // assign the new service to the vehicle
 
             this.vehicles.get(vehicleIndex).pickService(service);
-
             notifyObserver("User " + this.users.get(userIndex).getId() + " requests a service from " + service.toString() + ", the ride is assigned to " +
                     this.vehicles.get(vehicleIndex).getClass().getSimpleName() + " " + this.vehicles.get(vehicleIndex).getId() + " at location " +
                     this.vehicles.get(vehicleIndex).getLocation().toString());
@@ -80,18 +73,50 @@ public class TaxiCompany implements ITaxiCompany, ISubject {
         return false;
     }
 
+    public int findRideType(int userIndex, int freeVehicleIndex, int rideShareVehicleIndex, ILocation[] endPoints) {
+        boolean rideShare = isRideShare(rideShareVehicleIndex, endPoints);
+
+        // if there is no free vehicle and ride-sharing is unavailable
+        if (!rideShare && freeVehicleIndex == -1) {
+            return -1;
+        }
+
+        // if there is a free vehicle, assign a random pickup and drop-off location to the new service
+        // the distance between the pickup and the drop-off location should be at least 3 blocks
+        if (freeVehicleIndex != -1 && !rideShare) {
+            do {
+
+                endPoints[0] = ApplicationLibrary.randomLocation();
+                endPoints[1] = ApplicationLibrary.randomLocation(endPoints[0]);
+
+            } while (ApplicationLibrary.distance(endPoints[0], this.vehicles.get(freeVehicleIndex).getLocation()) < 3);
+            this.vehicles.get(freeVehicleIndex).setStatus(VehicleStatus.PICKUP);
+            return freeVehicleIndex;
+        }
+        return rideShareVehicleIndex;
+    }
+
     @Override
     public void arrivedAtPickupLocation(IVehicle vehicle) {
         // a vehicle arrives at the pickup location
 
-        notifyObserver(String.format("%-8s",vehicle.getClass().getSimpleName()) + vehicle.getId() + " loads user " + vehicle.getService().getUser().getId());
+        notifyObserver(String.format("%-8s",vehicle.getClass().getSimpleName()) + vehicle.getId() + " loads user " +
+                ((vehicle.getStatus() == VehicleStatus.PICKUP_RIDE_SHARE) ?
+                        vehicle.getServices().get(1).getUser().getId() : vehicle.getServices().get(0).getUser().getId()));
     }
 
     @Override
     public void arrivedAtDropoffLocation(IVehicle vehicle) {
         // a vehicle arrives at the drop-off location
 
-        IService service = vehicle.getService();
+        IService service;
+
+        if (vehicle.getStatus() == VehicleStatus.SERVICE) {
+           service = vehicle.getServices().get(0);
+        } else {
+            service = vehicle.getServices().get(1);
+        }
+
         int user = service.getUser().getId();
         int userIndex = indexOfUserId(user);
 
@@ -127,6 +152,15 @@ public class TaxiCompany implements ITaxiCompany, ISubject {
         return -1;
     }
 
+    private int findRideShareVehicle() {
+        for (IVehicle i: vehicles) {
+            if (i.isInService()) {
+                return vehicles.indexOf(i);
+            }
+        }
+        return -1;
+    }
+
     private int indexOfUserId(int id) {
         // finds the index of a user with the input id in the list, otherwise it returns -1
         for (IUser i: users) {
@@ -135,5 +169,26 @@ public class TaxiCompany implements ITaxiCompany, ISubject {
             }
         }
         return -1;
+    }
+
+    private boolean isRideShare(int rideShareVehicleIndex, ILocation[] endPoints) {
+
+        // If there is a vehicle available for ride-share check if both users are ok with is by using a randomizer
+        if (rideShareVehicleIndex != -1) {
+            endPoints[0] = ApplicationLibrary.randomLocation(); //updates origin but not destination --> Sprint 4 V1
+            endPoints[1] = ApplicationLibrary.randomLocation(endPoints[0]);
+
+            // If vehicle is within 3 distance then ride-sharing is available
+            if (ApplicationLibrary.distance(endPoints[0], this.vehicles.get(rideShareVehicleIndex).getLocation()) < 3 &&
+                    ApplicationLibrary.distance(endPoints[0], this.vehicles.get(rideShareVehicleIndex).getDestination()) > 3) {
+
+                // If users "accept" return true. Users "accept" if the random value is even
+                if (ApplicationLibrary.rand(2) % 2 == 0) {
+                    this.vehicles.get(rideShareVehicleIndex).setStatus(VehicleStatus.PICKUP_RIDE_SHARE);
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
