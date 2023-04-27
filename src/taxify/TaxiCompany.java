@@ -1,5 +1,6 @@
 package taxify;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class TaxiCompany implements ITaxiCompany, ISubject {
@@ -37,7 +38,7 @@ public class TaxiCompany implements ITaxiCompany, ISubject {
     }
 
     @Override
-    public boolean requestService(int user) {
+    public boolean provideService(int user) {
         int userIndex = indexOfUserId(user);
         int freeVehicleIndex = findFreeVehicle();
         int rideShareVehicleIndex = findRideShareVehicle();
@@ -47,30 +48,31 @@ public class TaxiCompany implements ITaxiCompany, ISubject {
 
         if (vehicleIndex != -1) {
 
-            // update the user status
+                // update the user status
 
-            this.users.get(userIndex).setService(true);
+                this.users.get(userIndex).setService(true);
 
-            // create a service with the user, the pickup and the drop-off location
+                // create a service with the user, the pickup and the drop-off location
 
-            IService service;
-            service = new Service(this.users.get(userIndex), endPoints[0], endPoints[1]);
+                IService service;
+                service = new Service(this.users.get(userIndex), endPoints[0], endPoints[1]);
 
-            // assign the new service to the vehicle
+                // assign the new service to the vehicle
 
-            this.vehicles.get(vehicleIndex).pickService(service);
-            notifyObserver("User " + this.users.get(userIndex).getId() + " requests a service from " + service.toString() + ", the ride is assigned to " +
-                    this.vehicles.get(vehicleIndex).getClass().getSimpleName() + " " + this.vehicles.get(vehicleIndex).getId() + " at location " +
-                    this.vehicles.get(vehicleIndex).getLocation().toString());
+                this.vehicles.get(vehicleIndex).pickService(service);
+                notifyObserver("User " + this.users.get(userIndex).getId() + " requests a service from " + service.toString() + ", the ride is assigned to " +
+                        this.vehicles.get(vehicleIndex).getClass().getSimpleName() + " " + this.vehicles.get(vehicleIndex).getId() + " at location " +
+                        this.vehicles.get(vehicleIndex).getLocation().toString());
 
-            // update the counter of services
+                // update the counter of services
 
-            this.totalServices++;
+                this.totalServices++;
 
-            return true;
-        }
+                return true;
 
-        return false;
+            }
+
+            return false;
     }
 
     public int findRideType(int userIndex, int freeVehicleIndex, int rideShareVehicleIndex, ILocation[] endPoints) {
@@ -90,7 +92,11 @@ public class TaxiCompany implements ITaxiCompany, ISubject {
                 endPoints[1] = ApplicationLibrary.randomLocation(endPoints[0]);
 
             } while (ApplicationLibrary.distance(endPoints[0], this.vehicles.get(freeVehicleIndex).getLocation()) < 3);
-            this.vehicles.get(freeVehicleIndex).setStatus(VehicleStatus.PICKUP);
+            if (this.vehicles.get(freeVehicleIndex).getClass() == Bike.class || this.vehicles.get(freeVehicleIndex).getClass() == Scooter.class) {
+                this.vehicles.get(freeVehicleIndex).setStatus(VehicleStatus.BOOKED);
+            } else {
+                this.vehicles.get(freeVehicleIndex).setStatus(VehicleStatus.PICKUP);
+            }
             return freeVehicleIndex;
         }
         return rideShareVehicleIndex;
@@ -155,7 +161,9 @@ public class TaxiCompany implements ITaxiCompany, ISubject {
     private int findRideShareVehicle() {
         for (IVehicle i: vehicles) {
             if (i.isInService()) {
-                return vehicles.indexOf(i);
+                if (i.getClass() == Taxi.class || i.getClass() == Shuttle.class) {
+                    return vehicles.indexOf(i);
+                }
             }
         }
         return -1;
@@ -175,6 +183,12 @@ public class TaxiCompany implements ITaxiCompany, ISubject {
 
         // If there is a vehicle available for ride-share check if both users are ok with is by using a randomizer
         if (rideShareVehicleIndex != -1) {
+
+            if (this.vehicles.get(rideShareVehicleIndex).getClass() == Bike.class
+                    || this.vehicles.get(rideShareVehicleIndex).getClass() == Scooter.class) {
+                return false;
+            }
+
             endPoints[0] = ApplicationLibrary.randomLocation(); //updates origin but not destination --> Sprint 4 V1
             endPoints[1] = ApplicationLibrary.randomLocation(endPoints[0]);
 

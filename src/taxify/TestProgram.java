@@ -14,13 +14,17 @@ public class TestProgram {
         }
 
         List<IVehicle> vehicles = new ArrayList<IVehicle>(10);
-        for (int i = 1; i <= 10; ++i) {
+        for (int i = 1; i <= 12; ++i) {
             IVehicle curr;
             ILocation pt = ApplicationLibrary.randomLocation();
-            if (i / 2 == 0) {
+            if (i % 4 == 0) {
                 curr = new Taxi(i, pt);
-            } else {
+            } else if (i % 4 == 1) {
                 curr = new Shuttle(i, pt);
+            } else if (i % 4 == 2) {
+                curr = new Bike(i, pt);
+            } else {
+                curr = new Scooter(i, pt);
             }
             vehicles.add(curr);
         }
@@ -42,10 +46,10 @@ public class TestProgram {
             for (int i = 0; i < vehicles.size(); ++i) {
                 if (vehicles.get(i).isFree()) j += 1;
             }
-            if (ApplicationLibrary.rand(10) < 3) application.requestService();
+            if (ApplicationLibrary.rand(10) % 5 == 0) application.requestService();
             application.show();
             application.update();
-        } while (j < 10);
+        } while (j < vehicles.size());
 
         application.showStatistics();
 

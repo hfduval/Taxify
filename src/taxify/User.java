@@ -46,7 +46,7 @@ public class User implements IUser {
 
     @Override
     public void requestService() {
-        this.company.requestService(this.id);
+        this.company.provideService(this.id);
     }
 
     @Override

@@ -33,7 +33,7 @@ public class ApplicationSimulator implements IApplicationSimulator, IObserver {
         for (int i=0; i<this.vehicles.size(); i++) {
             IStatistics curr = this.vehicles.get(i).getStatistics();
             System.out.println(
-                    this.vehicles.get(i).getClass().getSimpleName() + " " + this.vehicles.get(i).getId() +
+                    this.vehicles.get(i).getClass().getSimpleName() + " " + this.vehicles.get(i).getId() + " " +
                             curr.getServices() + " services " + curr.getDistance() + " km. " + curr.getBilling() + " "
                             + curr.getBilling() + " eur. " + curr.getReviews() + " reviews " + curr.getStars() + " stars"
                     );

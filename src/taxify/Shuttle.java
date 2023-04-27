@@ -7,7 +7,7 @@ public class Shuttle extends Vehicle {
     }
 
     @Override
-    public int calculateCost(IService service) {
+    public double calculateCost(IService service) {
         return (int) (super.calculateCost(service) * 1.5);
     }
 

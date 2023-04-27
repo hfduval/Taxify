@@ -54,6 +54,11 @@ public abstract class Vehicle implements IVehicle {
     }
 
     @Override
+    public List<ILocation> getRoute() {
+        return route;
+    }
+
+    @Override
     public void setStatus(VehicleStatus status) {
         this.status = status;
     }
@@ -61,6 +66,16 @@ public abstract class Vehicle implements IVehicle {
     @Override
     public void setCompany(ITaxiCompany company) {
         this.company = company;
+    }
+
+    @Override
+    public void setRoute(List<ILocation> route) {
+        this.route = route;
+    }
+
+    @Override
+    public void setLocation(ILocation location) {
+        this.location = location;
     }
 
     @Override
@@ -208,7 +223,7 @@ public abstract class Vehicle implements IVehicle {
     }
 
     @Override
-    public int calculateCost(IService service) {
+    public double calculateCost(IService service) {
         return service.calculateDistance();
         // returns the cost of the service as the distance
     }
@@ -231,7 +246,8 @@ public abstract class Vehicle implements IVehicle {
                         this.services.get(1).getUser().getId() : (this.status == VehicleStatus.SERVICE_RIDE_SHARE ? " is ride sharing" : " isn't ride sharing")));
     }
 
-    private List<ILocation> setDrivingRouteToDestination(ILocation location, ILocation destination) {
+    @Override
+    public List<ILocation> setDrivingRouteToDestination(ILocation location, ILocation destination) {
         List<ILocation> route = new ArrayList<ILocation>();
 
         int x1 = location.getX();

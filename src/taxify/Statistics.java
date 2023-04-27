@@ -4,14 +4,14 @@ public class Statistics implements IStatistics {
     private int services;
     private int reviews;
     private int stars;
-    private int billing;
+    private double billing;
     private int distance;
 
     public Statistics() {
         services = 0;
         reviews = 0;
         stars = 0;
-        billing = 0;
+        billing = 0.0;
         distance = 0;
     }
 
@@ -31,7 +31,7 @@ public class Statistics implements IStatistics {
         return distance;
     }
 
-    public int getBilling() {
+    public double getBilling() {
         return billing;
     }
 
@@ -51,7 +51,7 @@ public class Statistics implements IStatistics {
         this.distance += distance;
     }
 
-    public void updateBilling(int billing) {
+    public void updateBilling(double billing) {
         this.billing += billing;
     }
 }
