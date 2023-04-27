@@ -42,6 +42,7 @@ public class TestProgram {
             for (int i = 0; i < vehicles.size(); ++i) {
                 if (vehicles.get(i).isFree()) j += 1;
             }
+            if (ApplicationLibrary.rand(10) < 3) application.requestService();
             application.show();
             application.update();
         } while (j < 10);
